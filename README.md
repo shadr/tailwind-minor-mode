@@ -18,3 +18,11 @@ While lsp-tailwindcss is a great package that provides client to the tailwindcss
 
 Instead of requesting completion from the lsp, this package reads tailwind classes from a pregenerated file.
 Downside of this approach that we loose user defined classes in `input.css`/`tailwind.config.js`.
+
+# Tailwind keywords file
+`tailwind_keywords.txt` consists of rows in format "class kind" where:
+
+- class - name of the tailwind class
+- kind - completion kind of the class (color, enum, constant etc)
+
+It is generated manually using a function from `copy_candidates.el`
