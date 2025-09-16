@@ -68,9 +68,18 @@ CLASS-KIND-MAP is a hash table mapping class names to their kinds."
 
 (defun tailwind-minor-mode--point-in-class-p ()
   "Return non-nil if point is inside quotes of a class attribute."
-  (and (nth 3 (syntax-ppss))
-       (save-excursion
-         (re-search-backward "class\\s-*=\\s-*[\"']" nil t))))
+  (let ((state (syntax-ppss)))
+    (when (nth 3 state)  ; Inside a string
+      (let ((string-start (nth 8 state)))
+        (save-excursion
+          (goto-char string-start)
+          (backward-char)  ; Move before the opening quote
+          (skip-chars-backward " \t\n\r")  ; Skip whitespace
+          (when (eq (char-after) ?=)  ; Check for equals sign
+            (skip-chars-backward " \t\n\r")  ; Skip whitespace
+            (let ((end (point)))
+              (skip-chars-backward "a-zA-Z")  ; Move to start of attribute name
+              (string= (downcase (buffer-substring-no-properties (point) end)) "class"))))))))
 
 (defun tailwind-minor-mode--class-kind (class)
   "Get completion kind for a give class name"
