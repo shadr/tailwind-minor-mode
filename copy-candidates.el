@@ -26,12 +26,20 @@
   "Copy all current Corfu candidates to the kill ring and a buffer."
   (interactive)
   (when (and (boundp 'corfu--candidates) corfu--candidates)
-    (let ((candidates (mapconcat #'identity corfu--candidates "\n")))
-      (kill-new candidates)
+    (let ((candidates (mapconcat (lambda (cand) (concat cand " " (number-to-string (gethash "kind" (get-text-property 0 'lsp-completion-unresolved-item cand))))) corfu--candidates "\n")))
+      (message (get-text-property 0 'kind (car corfu--candidates)))
       (with-current-buffer (get-buffer-create "*Corfu Candidates*")
         (erase-buffer)
         (insert candidates)
         (pop-to-buffer (current-buffer)))
       (message "Copied %d candidates to *Corfu Candidates* buffer" (length corfu--candidates)))))
 
+(defun tailwind-minor-mode--print-kind-of-first-candidate ()
+  "Copy all current Corfu candidates to the kill ring and a buffer."
+  (interactive)
+  (when (and (boundp 'corfu--candidates) corfu--candidates)
+    (message (map-keys (text-properties-at 0 (car corfu--candidates))))))
+;; (message (gethash "kind" (get-text-property 0 'lsp-completion-item (car corfu--candidates))))))
+
 (map! :map corfu-map :i "M-k" #'tailwind-minor-mode--corfu-to-candidates-buffer)
+(map! :map corfu-map :i "M-j" #'tailwind-minor-mode--print-kind-of-first-candidate)
