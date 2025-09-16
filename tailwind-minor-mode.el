@@ -29,25 +29,25 @@
 
 (require 'treesit)
 
-(defvar tailwind-mode--class-list
+(defvar tailwind-minor-mode--class-list
   (with-temp-buffer
-    (insert-file-contents (expand-file-name "tailwind_keywords.txt" (file-name-directory load-file-name)))
+    (insert-file-contents (expand-file-name "tailwind_keywords.txt" (file-name-directory (or load-file-name ""))))
     (split-string (buffer-string) "\n" t)))
 
-(defun tailwind-mode--point-in-class-p ()
+(defun tailwind-minor-mode--point-in-class-p ()
   "Return non-nil if point is inside quotes of a class attribute."
   (and (nth 3 (syntax-ppss))
        (save-excursion
            (re-search-backward "class\\s-*=\\s-*[\"']" nil t))))
 
-(defun tailwind-mode-completion-function ()
+(defun tailwind-minor-mode-completion-function ()
   "Capf for tailwind classes when point inside class attribute"
-  (when (tailwind-mode--point-in-class-p)
+  (when (tailwind-minor-mode--point-in-class-p)
     (let ((bounds (or (bounds-of-thing-at-point 'symbol)
                       (cons (point) (point)))))
       (list (car bounds)
             (cdr bounds)
-            tailwind-mode--class-list
+            tailwind-minor-mode--class-list
             :annotation-function (lambda (_) " tailwind class")
             :category 'text
             :company-kind (lambda (_) 'text)))))
@@ -56,8 +56,8 @@
   "Minor mode that provides tailwind classes completion"
   :lighter "yes"
   (if tailwind-minor-mode
-      (add-to-list 'completion-at-point-functions #'tailwind-mode-completion-function)
-    (setq completion-at-point-functions (remove #'tailwind-mode-completion-function completion-at-point-functions))))
+      (add-to-list 'completion-at-point-functions #'tailwind-minor-mode-completion-function)
+    (setq completion-at-point-functions (remove #'tailwind-minor-mode-completion-function completion-at-point-functions))))
 
 
-(provide 'tailwind-mode)
+(provide 'tailwind-minor-mode)
