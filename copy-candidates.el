@@ -26,8 +26,13 @@
   "Copy all current Corfu candidates to the kill ring and a buffer."
   (interactive)
   (when (and (boundp 'corfu--candidates) corfu--candidates)
-    (let ((candidates (mapconcat (lambda (cand) (concat cand " " (number-to-string (gethash "kind" (get-text-property 0 'lsp-completion-unresolved-item cand))))) corfu--candidates "\n")))
-      (message (get-text-property 0 'kind (car corfu--candidates)))
+    (let ((candidates
+           (mapconcat
+            (lambda (cand)
+              (concat cand
+                      " "
+                      (number-to-string (plist-get (get-text-property 0 'lsp-completion-unresolved-item cand) :kind)))) corfu--candidates "\n")))
+      ;; (message (get-text-property 0 'kind (car corfu--candidates)))
       (with-current-buffer (get-buffer-create "*Corfu Candidates*")
         (erase-buffer)
         (insert candidates)
