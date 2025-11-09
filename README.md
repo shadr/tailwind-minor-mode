@@ -14,15 +14,7 @@
 ```
 
 # Why not lsp-tailwindcss ?
-While lsp-tailwindcss is a great package that provides client to the tailwindcss-lsp, it needs to parse insanely huge json that tailwindcss-lsp spits out when requesting completion candidates. 
+While lsp-tailwindcss is a great package that provides a client to the tailwindcss-lsp, it needs to parse insanely huge json that tailwindcss-lsp spits out when requesting completion candidates. 
 
-Instead of requesting completion from the lsp, this package reads tailwind classes from a pregenerated file.
-Downside of this approach that we loose user defined classes in `input.css`/`tailwind.config.js`.
-
-# Tailwind keywords file
-`tailwind_keywords.txt` consists of rows in format "class kind" where:
-
-- class - name of the tailwind class
-- kind - completion kind of the class (color, enum, constant etc)
-
-It is generated manually using a function from `copy_candidates.el`
+Instead of doing a request each time you need a completion suggestions, `tailwind-minor-mode` caches completion candidates as if you tried to get them for the class attribute in `<div class=""></div`.
+It is done by spawning a `tailwindcss-language-server` using built-in `jsonrpc` functionality, sending a few requests to initialize workspace, open virtual file and then get all possible completions.

@@ -27,44 +27,13 @@
 
 ;;; Code:
 
-(defvar tailwind-minor-mode--class-list)
-
-(defvar tailwind-minor-mode--class-kind-map)
-
-(defun tailwind-minor-mode--class-file-name ()
-  (expand-file-name "tailwind_keywords.txt" (file-name-directory (or load-file-name ""))))
-
-(defun tailwind-minor-mode-reload-classes()
-  (interactive)
-  (let ((data (tailwind-minor-mode--read-class-data (tailwind-minor-mode--class-file-name))))
-    (setq tailwind-minor-mode--class-list (car data))
-    (setq tailwind-minor-mode--class-kind-map (car (cdr data)))))
+(require 'tailwind-cache)
 
 (defvar tailwind-minor-mode--kind-map
   '(text text method function constructor field variable
     class interface module property unit value enum keyword
     snippet color file reference folder enummember constant
     struct event operator typeparameter))
-
-(defun tailwind-minor-mode--read-class-data (filename)
-  "Read FILENAME and return a list (class-list class-kind-map).
-CLASS-LIST is a list of class names in order of appearance.
-CLASS-KIND-MAP is a hash table mapping class names to their kinds."
-  (let ((class-list '())
-        (class-kind-map (make-hash-table :test 'equal :size 20000)))
-    (with-temp-buffer
-      (insert-file-contents filename)
-      (goto-char (point-min))
-      (while (not (eobp))
-        (let* ((line (string-trim (buffer-substring (line-beginning-position) (line-end-position))))
-               (tokens (split-string line)))
-          (when (>= (length tokens) 2)
-            (let ((class-name (car tokens))
-                  (kind (mapconcat 'identity (cdr tokens) " ")))
-              (push class-name class-list)
-              (puthash class-name kind class-kind-map))))
-        (forward-line)))
-    (list (nreverse class-list) class-kind-map)))
 
 (defun tailwind-minor-mode--point-in-class-p ()
   "Return non-nil if point is inside quotes of a class attribute."
@@ -83,17 +52,18 @@ CLASS-KIND-MAP is a hash table mapping class names to their kinds."
 
 (defun tailwind-minor-mode--class-kind (class)
   "Get completion kind for a give class name"
-  (let ((kind (gethash class tailwind-minor-mode--class-kind-map)))
-    (if kind (nth (string-to-number kind) tailwind-minor-mode--kind-map) 'text)))
+  (let* ((completion-item (alist-get class (tailwind-minor-mode--get-project-cached-completions) nil nil #'string-equal))
+         (kind (plist-get completion-item :kind)))
+    (if kind (nth kind tailwind-minor-mode--kind-map) 'text)))
 
 (defun tailwind-minor-mode-completion-function ()
-  "Capf for tailwind classes when point inside class attribute"
+  "Capf for tailwind classes when point is inside class attribute"
   (when (tailwind-minor-mode--point-in-class-p)
     (let ((bounds (or (bounds-of-thing-at-point 'symbol)
                       (cons (point) (point)))))
       (list (car bounds)
             (cdr bounds)
-            tailwind-minor-mode--class-list
+            (tailwind-minor-mode--get-project-cached-completions)
             :annotation-function (lambda (_) " tailwind class")
             :category 'text
             :company-kind #'tailwind-minor-mode--class-kind))))
@@ -102,9 +72,10 @@ CLASS-KIND-MAP is a hash table mapping class names to their kinds."
   "Minor mode that provides tailwind classes completion"
   :lighter "yes"
   (if tailwind-minor-mode
-      (add-to-list 'completion-at-point-functions #'tailwind-minor-mode-completion-function)
+      (progn
+        (add-to-list 'completion-at-point-functions #'tailwind-minor-mode-completion-function)
+        (unless (assoc* (project-root (project-current)) tailwind-minor-mode--cached-completions)
+          (tailwind-minor-mode-cache-completions)))
     (setq completion-at-point-functions (remove #'tailwind-minor-mode-completion-function completion-at-point-functions))))
-
-(tailwind-minor-mode-reload-classes)
 
 (provide 'tailwind-minor-mode)
