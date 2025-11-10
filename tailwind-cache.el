@@ -86,17 +86,24 @@
       (jsonrpc-shutdown tailwind-cache--connection)
       (plist-get result :items))))
 
-(defun tailwind-minor-mode--completions-to-alist (sequence)
-  (mapcar (lambda (x) (cons (plist-get x :label) x)) sequence))
+(defun tailwind-minor-mode--completions-to-hash-table (sequence)
+  (let ((hash-table (make-hash-table :test 'equal :size (length sequence))))
+    (dotimes (i (length sequence) hash-table)
+      (let ((plist (aref sequence i))
+            (label (plist-get (aref sequence i) :label)))
+        (when label
+          (puthash label plist hash-table))))))
 
 (defun tailwind-minor-mode--get-project-cached-completions ()
   (let ((root (project-root (project-current))))
-    (alist-get root tailwind-minor-mode--cached-completions nil nil #'string-equal)))
+    (plist-get tailwind-minor-mode--cached-completions root #'string-equal)))
 
 (defun tailwind-minor-mode-cache-completions ()
   (interactive)
   (let ((root (project-root (project-current))))
-    (setq tailwind-minor-mode--cached-completions (append tailwind-minor-mode--cached-completions `((,root . ,(tailwind-minor-mode--completions-to-alist (tailwind-minor-mode--get-completions root))))))))
+    (setq tailwind-minor-mode--cached-completions
+          (plist-put tailwind-minor-mode--cached-completions root
+                     (tailwind-minor-mode--completions-to-hash-table (tailwind-minor-mode--get-completions root))))))
 
 (provide 'tailwind-cache)
 ;;; tailwind-cache.el ends here

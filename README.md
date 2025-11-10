@@ -4,7 +4,9 @@
 # Installation
 1) clone package somewhere
 
-`git clone https://github.com/shadr/tailwind-minor-mode.git ~/tailwind-minor-mode`
+``` sh
+git clone https://github.com/shadr/tailwind-minor-mode.git ~/tailwind-minor-mode
+```
 
 2) add `tailwind-minor-mode` directory to the load-path of Emacs and load the package
 

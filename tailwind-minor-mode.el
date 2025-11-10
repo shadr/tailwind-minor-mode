@@ -52,9 +52,10 @@
 
 (defun tailwind-minor-mode--class-kind (class)
   "Get completion kind for a give class name"
-  (let* ((completion-item (alist-get class (tailwind-minor-mode--get-project-cached-completions) nil nil #'string-equal))
-         (kind (plist-get completion-item :kind)))
-    (if kind (nth kind tailwind-minor-mode--kind-map) 'text)))
+  (benchmark-progn
+    (let* ((completion-item (gethash class (tailwind-minor-mode--get-project-cached-completions)))
+           (kind (plist-get completion-item :kind)))
+      (if kind (nth kind tailwind-minor-mode--kind-map) 'text))))
 
 (defun tailwind-minor-mode-completion-function ()
   "Capf for tailwind classes when point is inside class attribute"
@@ -74,7 +75,7 @@
   (if tailwind-minor-mode
       (progn
         (add-to-list 'completion-at-point-functions #'tailwind-minor-mode-completion-function)
-        (unless (assoc* (project-root (project-current)) tailwind-minor-mode--cached-completions)
+        (unless (plist-get  tailwind-minor-mode--cached-completions (project-root (project-current)) #'string-equal)
           (tailwind-minor-mode-cache-completions)))
     (setq completion-at-point-functions (remove #'tailwind-minor-mode-completion-function completion-at-point-functions))))
 
