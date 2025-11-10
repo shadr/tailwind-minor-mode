@@ -52,10 +52,9 @@
 
 (defun tailwind-minor-mode--class-kind (class)
   "Get completion kind for a give class name"
-  (benchmark-progn
-    (let* ((completion-item (gethash class (tailwind-minor-mode--get-project-cached-completions)))
-           (kind (plist-get completion-item :kind)))
-      (if kind (nth kind tailwind-minor-mode--kind-map) 'text))))
+  (let* ((completion-item (gethash class (tailwind-minor-mode--get-project-cached-completions)))
+         (kind (plist-get completion-item :kind)))
+    (if kind (nth kind tailwind-minor-mode--kind-map) 'text)))
 
 (defun tailwind-minor-mode-completion-function ()
   "Capf for tailwind classes when point is inside class attribute"

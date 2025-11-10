@@ -36,6 +36,7 @@
   (jsonrpc-process-connection
    :name "Tailwindcss Caching Client"
    :request-dispatcher #'tailwind-minor-mode--cache-on-request
+   :events-buffer-config '(:size 0)
    :process (make-process
              :name "tailwindcss-language-server"
              :command '("/home/shadr/.bun/bin/tailwindcss-language-server" "--stdio")
