@@ -32,6 +32,12 @@
 (defvar tailwind-minor-mode--cached-completions nil
   "A map that stores cached completion items for each project.")
 
+(defcustom tailwind-minor-mode-executable
+  (executable-find "tailwindcss-language-server")
+  "Path to the Tailwind CSS language server executable."
+  :type 'string
+  :group 'tailwind)
+
 (defun tailwind-minor-mode--cache-make-connection ()
   (jsonrpc-process-connection
    :name "Tailwindcss Caching Client"
@@ -39,7 +45,7 @@
    :events-buffer-config '(:size 0)
    :process (make-process
              :name "tailwindcss-language-server"
-             :command '("/home/shadr/.bun/bin/tailwindcss-language-server" "--stdio")
+             :command `(,tailwind-minor-mode-executable "--stdio")
              :connection-type 'pipe
              :noquery t
              :stderr (get-buffer-create "*tailwind-lsp-stderr*"))))
